@@ -50,7 +50,7 @@ class Directory extends Component {
 
         return (
             <div className="container">
-                <div classname="row">
+                <div className="row">
                     {directory}
                 </div>
             </div>
