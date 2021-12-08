@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import { Card, CardImg, CardText, CardBody, Breadcrumb, BreadcrumbItem, Button, Label, Modal, ModalHeader, ModalBody, Form, FormGroup, } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import { Control, Errors } from 'react-redux-form';
+import { Loading } from './LoadingComponent';
 
 
 const minLength = len => val => val && (val.length >= len);
 const maxLength = len => val => !val || (val.length <= len);
-const required = val => val && val.length;
 
 class CommentForm extends Component {
     constructor(props) {
@@ -30,12 +30,9 @@ class CommentForm extends Component {
         });
     }
 
-    //I can't get the alert message to pop up
-    handleSubmit(event) {
-        console.log(`Rating: ${this.rating.value} Author: ${this.author.value} Comments: ${this.text.value}`);
-        alert(`Rating: ${this.rating.value} Author: ${this.author.value} Comments: ${this.text.value}`);
+    handleSubmit(values) {
         this.toggleModal();
-        event.preventDefault();
+        this.props.addComment(this.props.campsiteId, values.rating, values.author, values.text);
     }
 
     render() {
@@ -52,7 +49,7 @@ class CommentForm extends Component {
                             <FormGroup>
                                 <Label htmlFor="rating">Rating</Label>
                                 <Control.select model=".rating" name="rating" id="rating" className="form-control">
-                                    <option>1 star </option> 
+                                    <option>1 star </option>
                                     <option>2 stars</option>
                                     <option>3 stars</option>
                                     <option>4 stars</option>
@@ -63,12 +60,11 @@ class CommentForm extends Component {
                                 <Label htmlFor="author">Author</Label>
                                 <Control.text model=".author" name="author" id="author" placeholder="Author Name" className="form-control"
                                     validators={{
-                                        required,
                                         minLength: minLength(2),
                                         maxLength: maxLength(15)
                                     }}
-                                />                              
-                                {/* I don't know why but the error messages are breaking the modal, someone help...
+                                />
+                                {
                                 <Errors
                                     className="text-danger"
                                     model=".author"
@@ -79,7 +75,8 @@ class CommentForm extends Component {
                                         minLength: 'Must be at least 2 characters',
                                         maxLength: 'Must be 15 characters or less'
                                     }}
-                                />*/}
+                                /> 
+                                }
                             </FormGroup>
                             <FormGroup>
                                 <Label htmlfor="text">Comments</Label>
@@ -107,7 +104,7 @@ function RenderCampsite({ campsite }) {
     )
 }
 
-function RenderComments({ comments }) {
+function RenderComments({ comments, addComment, campsiteId }) {
     if (comments) {
         return (
             <div className="col-md-5 m-1">
@@ -119,7 +116,7 @@ function RenderComments({ comments }) {
                     </div>
                 )
                 }
-                <CommentForm />
+                <CommentForm campsiteId={campsiteId} addComment={addComment} />
             </div>
         );
     }
@@ -133,6 +130,26 @@ function RenderComments({ comments }) {
 }
 
 function CampsiteInfo(props) {
+    if (props.isLoading) {
+        return (
+            <div className="container">
+                <div className="row">
+                    <Loading />
+                </div>
+            </div>
+        );
+    }
+    if (props.errMess) {
+        return (
+            <div className="container">
+                <div className="row">
+                    <div className="col">
+                        <h4>{props.errMess}</h4>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     if (props.campsite) {
         return (
             <div className="container">
@@ -148,7 +165,11 @@ function CampsiteInfo(props) {
                 </div>
                 <div className="row">
                     <RenderCampsite campsite={props.campsite} />
-                    <RenderComments comments={props.comments} />
+                    <RenderComments
+                        comments={props.comments}
+                        addComment={props.addComment}
+                        campsiteId={props.campsite.id}
+                    />
                 </div>
             </div>
         )
